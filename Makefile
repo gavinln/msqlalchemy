@@ -14,16 +14,19 @@ quickstart-run:
 	pipenv run python quickstart/mlflow_tracking.py
 
 run:
-	python python/msqlalchemy.py
+	@python python/msqlalchemy.py
 
 pylint:
 	pylint --rcfile .pylint.rc python/*.py
 
-autopep8:
-	autopep8 -i python/*.py
+yapf:
+	yapf -i python/*.py
 
 flake8:
 	flake8 python/*
+
+mypy:
+	@mypy --follow-imports=skip --ignore-missing-imports python
 
 clean:
 	echo 'not implemented'

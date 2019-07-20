@@ -4,8 +4,12 @@ Example of using Marshmallow with SqlAlchemy with sqlite
 import pathlib
 import logging
 
+from IPython import embed
+
 import sqlalchemy as sa
 from sqlalchemy.orm import scoped_session, sessionmaker
+
+from engines_core import get_author_json_obj
 
 from engines_obj import Author, Book
 from engines_obj import AuthorSchema, BookSchema
@@ -13,7 +17,7 @@ from engines_obj import AuthorSchema, BookSchema
 from engines_sql import Base
 from engines_sql import AuthorDB, BookDB
 from engines_sql import AuthorSchemaDB
-
+from engines_sql import BookSchemaDB
 
 SCRIPT_DIR = pathlib.Path(__file__).parent.resolve()
 LOG = logging.getLogger(__name__)
@@ -24,48 +28,58 @@ session = scoped_session(sessionmaker(bind=engine))
 Base.metadata.create_all(engine)
 
 
-def dump_load_data_DB():
-    author = AuthorDB(name="Chuck Paluhniuk")
-    book = BookDB(title="Fight Club", author=author)
+def load_data_into_db(author_obj):
+    print('-----Loading data into db')
+    author = AuthorDB.create(author_obj)
     session.add(author)
-    session.add(book)
+
+    for book_obj in author_obj.books:
+        book = BookDB.create(book_obj, author)
+        session.add(book)
     session.commit()
 
+    author_schema = AuthorSchema()
+
+    print('-----Dumping objects from db using schema')
+    print(author_schema.dump(author).data)
+
     author_schema = AuthorSchemaDB()
-    dump_data = author_schema.dump(author).data
-    LOG.debug('dump data %s', dump_data)
-    # {'books': [1], 'id': 1, 'name': 'Chuck Paluhniuk'}
+    book_schema = BookSchemaDB()
+    print('-----Dumping objects from db using db schema')
+    authors = session.query(AuthorDB).all()
+    print(author_schema.dump(authors[0]).data)
+    books = session.query(BookDB).all()
+    for book in books:
+        print('\t', book_schema.dump(book).data)
 
-    load_data = author_schema.load(dump_data, session=session).data
-    LOG.debug('load data %s', load_data)
-    # <Author(name='Chuck Paluhniuk')>
-
-    author_schema = AuthorSchema()
-    book_schema = BookSchema()
-
-    LOG.debug('author: %s', author_schema.dump(author).data)
-    LOG.debug('book: %s', book_schema.dump(book).data)
-
-
-def dump_load_data():
-    author = Author(name="Chuck Paluhniuk", id=1)
-    book = Book(title="Fight Club", author_id=author.id, id=1)
-    LOG.debug('author: %s', author)
-    LOG.debug('book: %s', book)
-
-    author_schema = AuthorSchema()
-    book_schema = BookSchema()
-
-    LOG.debug('author: %s', author_schema.dump(author).data)
-    LOG.debug('book: %s', book_schema.dump(book).data)
+    print('-----convert db objects to schema objs')
+    print(authors[0].to_obj())
 
 
 def main():
     logging.basicConfig(level=logging.DEBUG)
-    dump_load_data_DB()
-    print('-------------------------')
-    dump_load_data()
+    author_json_obj = get_author_json_obj()
+
+    print("-----Author json obj")
+    print(author_json_obj)
+
+    author_schema = AuthorSchema()
+    print("-----Author json schema obj")
+    # author_schema.context = {'author': author_json_obj}
+    author_obj = author_schema.load(author_json_obj).data
+    print("-----Recursive structure not handled using print")
+    print(author_obj)
+    print("-----Recursive structure handled using dump")
+    print(author_schema.dump(author_obj).data)
+
+    load_data_into_db(author_obj)
+
+    print('-----Retrieving all authors from the db')
+    print(session.query(AuthorDB).all())
+    print('-----Retrieving all books from the db')
+    print(session.query(BookDB).all())
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.WARNING)
     main()

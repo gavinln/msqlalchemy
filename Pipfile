@@ -12,7 +12,9 @@ marshmallow-sqlalchemy = "*"
 pymongo = "*"
 flake8 = "*"
 pylint = "*"
-autopep8 = "*"
+ipython = "*"
+mypy = "*"
+yapf = "*"
 
 [requires]
 python_version = "3.7"
