@@ -53,7 +53,7 @@ class BookDB(Base):
         return cls(title=book.title, author=author)
 
     def to_obj(self) -> eobj.Book:
-        return eobj.Book(id=self.id, title=self.title, _author=None)
+        return eobj.Book(id=self.id, title=self.title, author=None)
 
 
 class AuthorSchemaDB(ModelSchema):

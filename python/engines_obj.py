@@ -4,7 +4,7 @@ Marshmallow objects and schemas
 import pathlib
 import logging
 
-from typing import List
+from typing import List, Optional
 
 from dataclasses import dataclass
 
@@ -26,7 +26,7 @@ class Author:
 class Book:
     id: int
     title: str
-    _author: Author
+    author: Optional[Author]
 
 
 class BookSchema(Schema):
@@ -36,7 +36,7 @@ class BookSchema(Schema):
     @post_load
     def make_book(self, data, **kwargs):
         assert 'author' in self.context, 'No author in context'
-        data['_author'] = self.context['author']
+        data['author'] = self.context['author']
         return Book(**data)
 
 
