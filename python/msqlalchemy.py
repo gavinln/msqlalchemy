@@ -4,15 +4,13 @@ Example of using Marshmallow with SqlAlchemy with sqlite
 import pathlib
 import logging
 
-from IPython import embed
 
 import sqlalchemy as sa
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from engines_core import get_author_json_obj
 
-from engines_obj import Author, Book
-from engines_obj import AuthorSchema, BookSchema
+from engines_obj import AuthorSchema
 
 from engines_sql import Base
 from engines_sql import AuthorDB, BookDB
